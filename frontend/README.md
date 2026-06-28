@@ -1,34 +1,63 @@
-# React + TypeScript + Vite
+# B2A Learning Journal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A simple knowledge dictionary for interns to store and organize what they're learning during onboarding.
 
-Currently, two official plugins are available:
+## Project Goal
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Build a personal and team-level knowledge base where interns can write notes about topics like:
+- What is CQRS?
+- What is PostgreSQL?
+- What is GitHub Actions?
+- What is deployment?
 
-## React Compiler
+This helps interns learn full-stack architecture while creating something useful for the team.
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Tech Stack
 
-Note: This will impact Vite dev & build performances.
+- **Frontend:** React + Vite + TypeScript
+- **Backend:** Node.js + Express + TypeScript (coming soon)
+- **Database:** Supabase PostgreSQL (coming soon)
 
-## Expanding the Oxlint configuration
+## How to Run
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Prerequisites
+- Node.js installed
+- npm or yarn
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### Frontend Setup
+
+1. Install dependencies:
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+2. Start the development server:
+```bash
+npm start
+```
+
+3. Open your browser to:
+```
+http://localhost:5173
+```
+
+### Available Scripts
+
+- `npm start` - Start the development server with hot reload
+- `npm run build` - Build for production
+- `npm run lint` - Run linter
+
+## Current Features
+
+- View knowledge notes
+- Note cards with title and content
+- Responsive design
+
+## Coming Soon
+
+- Create, edit, and delete notes
+- Search functionality
+- Categories and tags
+- User authentication
+- Backend API integration
+- Database storage
