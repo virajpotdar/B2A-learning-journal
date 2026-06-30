@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase/client";
+import { clearAuthUser } from "../utils/auth";
 
 export default function Journal() {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    clearAuthUser();
     navigate("/login");
   };
 
