@@ -3,7 +3,7 @@ import NoteForm from '../components/NoteForm';
 import NoteCard from '../components/NoteCard';
 import type { JournalNote } from '../types';
 
-export default function FrontendPage() {
+export default function OtherPage() {
   const [notes, setNotes] = useState<JournalNote[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -14,8 +14,8 @@ export default function FrontendPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      const frontendNotes = data.filter((note: JournalNote) => note.category === 'Frontend');
-      setNotes(frontendNotes || []);
+      const otherNotes = data.filter((note: JournalNote) => note.category === 'Other');
+      setNotes(otherNotes || []);
     } catch (error) {
       console.error('Failed to fetch notes:', error);
       setNotes([]);
@@ -65,27 +65,27 @@ export default function FrontendPage() {
   );
 
   return (
-    <div style={{ fontFamily: 'sans-serif', background: '#f5f5f5', minHeight: '100vh' }}>
+    <div style={{ fontFamily: 'sans-serif', background: '#f3e5f5', minHeight: '100vh' }}>
       <main style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem 2rem' }}>
         <div style={{ 
           textAlign: 'center', 
           marginBottom: '3rem',
           padding: '2rem',
-          background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+          background: 'linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%)',
           borderRadius: '16px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}>
           <h1 style={{ 
-            color: '#1976d2', 
+            color: '#6a1b9a', 
             marginBottom: '0.5rem', 
             fontSize: '2.5rem',
             fontWeight: 'bold'
-          }}>Frontend Knowledge</h1>
-          <p style={{ color: '#1565c0', fontSize: '1.1rem', margin: 0 }}>
-            Capture your frontend development insights
+          }}>Other Knowledge</h1>
+          <p style={{ color: '#4527a0', fontSize: '1.1rem', margin: 0 }}>
+            Store your other learning notes here
           </p>
         </div>
-        
+
         <div style={{ marginBottom: '2rem' }}>
           <input
             type="text"
@@ -102,8 +102,8 @@ export default function FrontendPage() {
               transition: 'border-color 0.2s, box-shadow 0.2s'
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#1976d2';
-              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(25, 118, 210, 0.1)';
+              e.currentTarget.style.borderColor = '#7e57c2';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(126, 87, 194, 0.1)';
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = '#e0e0e0';
@@ -112,7 +112,7 @@ export default function FrontendPage() {
           />
         </div>
 
-        <NoteForm onNoteAdded={fetchNotes} category="Frontend" />
+        <NoteForm onNoteAdded={fetchNotes} category="Other" />
         
         <h2 style={{ 
           marginBottom: '1.5rem', 
@@ -120,7 +120,7 @@ export default function FrontendPage() {
           fontSize: '1.75rem',
           fontWeight: 'bold'
         }}>
-          Recent Frontend Notes
+          Recent Other Notes
         </h2>
         {filteredNotes.length === 0 ? (
           <div style={{
@@ -131,7 +131,7 @@ export default function FrontendPage() {
             color: '#999',
             fontSize: '1.1rem'
           }}>
-            No notes yet. Create your first frontend note above!
+            No notes yet. Create your first other note above!
           </div>
         ) : (
           <div style={{ display: 'grid', gap: '1.5rem' }}>
