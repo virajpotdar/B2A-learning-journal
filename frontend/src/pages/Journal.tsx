@@ -1,13 +1,36 @@
 import { useNavigate } from "react-router-dom";
-import { clearAuthUser } from "../utils/auth";
+import { useState, useEffect } from "react";
 
 export default function Journal() {
   const navigate = useNavigate();
+  const [noteCounts, setNoteCounts] = useState<{ frontend: number; backend: number; other: number }>({
+    frontend: 0,
+    backend: 0,
+    other: 0,
+  });
 
-  const handleLogout = () => {
-    clearAuthUser();
-    navigate("/login");
-  };
+  useEffect(() => {
+    const fetchNoteCounts = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/notes");
+        const notes = await res.json();
+        
+        const counts = notes.reduce((acc: any, note: any) => {
+          const category = note.category?.toLowerCase() || 'other';
+          if (acc[category] !== undefined) {
+            acc[category]++;
+          }
+          return acc;
+        }, { frontend: 0, backend: 0, other: 0 });
+        
+        setNoteCounts(counts);
+      } catch (error) {
+        console.error("Failed to fetch note counts:", error);
+      }
+    };
+
+    fetchNoteCounts();
+  }, []);
 
   return (
     <div
@@ -57,66 +80,9 @@ export default function Journal() {
               lineHeight: "1.75",
             }}
           >
-            Keep your learning notes organized by topic, then click a category
-            to save new entries for frontend, backend, or other topics.
+            Welcome! Keep your learning notes organized by topic. Click a category
+            to view and manage your notes.
           </p>
-
-          {/* Button Container to keep them nicely spaced */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "15px",
-              marginBottom: "2.5rem",
-            }}
-          >
-            <button
-              type="button"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "1rem 2rem",
-                borderRadius: "999px",
-                border: "none",
-                background: "linear-gradient(135deg, #fb8c00 0%, #fdd835 100%)",
-                color: "white",
-                fontSize: "1.1rem",
-                fontWeight: "700",
-                boxShadow: "0 14px 30px rgba(251, 140, 0, 0.18)",
-                cursor: "default",
-              }}
-            >
-              Welcome
-            </button>
-
-            {/* The New Logout Button that fixes the TS6133 Error */}
-            <button
-              onClick={handleLogout}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "1rem 2rem",
-                borderRadius: "999px",
-                border: "2px solid #ffebee",
-                background: "white",
-                color: "#d32f2f",
-                fontSize: "1.1rem",
-                fontWeight: "700",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = "#ffebee";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = "white";
-              }}
-            >
-              Logout
-            </button>
-          </div>
 
           <div
             style={{
@@ -145,9 +111,21 @@ export default function Journal() {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <h2 style={{ margin: "0 0 0.75rem", color: "#1565c0" }}>
-                Frontend
-              </h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <h2 style={{ margin: 0, color: "#1565c0" }}>
+                  Frontend
+                </h2>
+                <span style={{
+                  background: "#1565c0",
+                  color: "white",
+                  padding: "0.25rem 0.75rem",
+                  borderRadius: "12px",
+                  fontSize: "0.875rem",
+                  fontWeight: "bold"
+                }}>
+                  {noteCounts.frontend} notes
+                </span>
+              </div>
               <p style={{ margin: 0, color: "#455a64", lineHeight: "1.7" }}>
                 Save your frontend information here and keep track of your
                 React, CSS, and UI learning notes.
@@ -174,9 +152,21 @@ export default function Journal() {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <h2 style={{ margin: "0 0 0.75rem", color: "#e65100" }}>
-                Backend
-              </h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <h2 style={{ margin: 0, color: "#e65100" }}>
+                  Backend
+                </h2>
+                <span style={{
+                  background: "#e65100",
+                  color: "white",
+                  padding: "0.25rem 0.75rem",
+                  borderRadius: "12px",
+                  fontSize: "0.875rem",
+                  fontWeight: "bold"
+                }}>
+                  {noteCounts.backend} notes
+                </span>
+              </div>
               <p style={{ margin: 0, color: "#5d4037", lineHeight: "1.7" }}>
                 Store your backend learning notes here, including server,
                 database, and API concepts.
@@ -203,9 +193,21 @@ export default function Journal() {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <h2 style={{ margin: "0 0 0.75rem", color: "#6a1b9a" }}>Other</h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <h2 style={{ margin: 0, color: "#6a1b9a" }}>Other</h2>
+                <span style={{
+                  background: "#6a1b9a",
+                  color: "white",
+                  padding: "0.25rem 0.75rem",
+                  borderRadius: "12px",
+                  fontSize: "0.875rem",
+                  fontWeight: "bold"
+                }}>
+                  {noteCounts.other} notes
+                </span>
+              </div>
               <p style={{ margin: 0, color: "#4a148c", lineHeight: "1.7" }}>
-                Save any other information here—notes that don’t fit in frontend
+                Save any other information here—notes that don't fit in frontend
                 or backend categories.
               </p>
             </div>

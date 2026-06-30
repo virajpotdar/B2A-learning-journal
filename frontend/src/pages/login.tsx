@@ -5,7 +5,7 @@ import { setAuthUser } from "../utils/auth";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function Login() {
-  const { loginWithRedirect } = useAuth0();
+  const { loginWithPopup } = useAuth0();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -92,7 +92,7 @@ function Login() {
 
           <button
             type="button"
-            onClick={() => loginWithRedirect()}
+            onClick={() => loginWithPopup({ authorizationParams: { connection: 'google-oauth2' } })}
             style={{
               width: '100%',
               padding: '0.75rem',

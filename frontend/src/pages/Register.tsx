@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Register() {
-  const { loginWithRedirect } = useAuth0();
+  const { loginWithPopup } = useAuth0();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,29 +17,25 @@ export default function Register() {
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     // Requirement 1 & 10: Validation
     if (!username) return setError("Username is required");
+    if (!email) return setError("Email is required");
     if (password !== confirm) return setError("Passwords do not match");
     if (username.length < 3 || username.length > 30) return setError("Username must be 3-30 characters");
     if (!/^[a-zA-Z0-9_-]+$/.test(username)) return setError("Username can only contain alphanumeric, hyphens, and underscores");
 
     setLoading(true);
 
-  const handleAdminCreate = async () => {
-    setAdminError("");
-    setInfoMessage("");
-    if (!email || !password) {
-      setAdminError("Email and password are required");
-      return;
-    }
-    setAdminLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
     try {
-      const res = await fetch(`${apiUrl}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Use backend register endpoint for custom authentication
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+      const response = await fetch(`${backendUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, username }),
       });
 
       const data = await response.json();
@@ -56,7 +52,7 @@ export default function Register() {
       setLoading(false);
     }
   };
-
+    
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -91,7 +87,7 @@ export default function Register() {
 
           <button
             type="button"
-            onClick={() => loginWithRedirect()}
+            onClick={() => loginWithPopup({ authorizationParams: { connection: 'google-oauth2', screen_hint: 'signup' } })}
             style={{
               width: '100%',
               padding: '0.75rem',

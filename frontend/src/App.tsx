@@ -19,11 +19,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 export default function App() {
   // 1. Bring in the Auth0 hook to check the user's status
-  const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0();
-
-  const handleLogout = () => {
-    logout({ logoutParams: { returnTo: window.location.origin } });
-  };
+  const { isAuthenticated, isLoading, user } = useAuth0();
 
   // 2. Requirement 8: Create OAuth user profile in Supabase when user authenticates via Google
   useEffect(() => {
