@@ -30,7 +30,7 @@ export default function Register() {
 
     try {
       const res = await supabase.auth.signUp({ email, password });
-      console.log('signUp response', res);
+      console.log("signUp response", res);
       const { error } = res;
       if (error) {
         const msg = error.message || String(error);
@@ -38,17 +38,20 @@ export default function Register() {
         // handle rate limit error by disabling retry for 60s
         if (/rate limit/i.test(msg) || /too many requests/i.test(msg)) {
           setRetryDisabled(true);
-          setInfoMessage('Too many signup attempts. Please wait 60 seconds before retrying.');
+          setInfoMessage(
+            "Too many signup attempts. Please wait 60 seconds before retrying.",
+          );
           setTimeout(() => {
             setRetryDisabled(false);
-            setInfoMessage('');
+            setInfoMessage("");
           }, 60000);
         }
       } else {
         // Successful signup — always redirect to login and inform user
-        const msg = 'Registration successful — please check your email to confirm your account (if required) and then log in.';
+        const msg =
+          "Registration successful — please check your email to confirm your account (if required) and then log in.";
         setInfoMessage(msg);
-        navigate('/login', { state: { message: msg } });
+        navigate("/login", { state: { message: msg } });
       }
     } catch (err) {
       console.error(err);
@@ -62,23 +65,24 @@ export default function Register() {
     setAdminError("");
     setInfoMessage("");
     if (!email || !password) {
-      setAdminError('Email and password are required');
+      setAdminError("Email and password are required");
       return;
     }
     setAdminLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
     try {
-      const res = await fetch('http://localhost:4000/api/auth/admin-create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(`${apiUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      console.log('admin-create response', res.status, data);
+      console.log("admin-create response", res.status, data);
       if (!res.ok) {
         setAdminError(data?.error || JSON.stringify(data));
       } else {
         // created and confirmed server-side
-        navigate('/journal');
+        navigate("/journal");
       }
     } catch (err) {
       console.error(err);
@@ -104,16 +108,28 @@ export default function Register() {
           </div>
           <div className="auth-input">
             <label>Password</label>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: "relative" }}>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%' }}
+                style={{ width: "100%" }}
               />
-              <button type="button" onClick={() => setShowPassword(s => !s)} style={{ position: 'absolute', right: 8, top: 8, background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle password visibility">
-                {showPassword ? '🙈' : '👁️'}
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
           </div>
@@ -126,19 +142,41 @@ export default function Register() {
               onChange={(e) => setConfirm(e.target.value)}
             />
           </div>
-          <button className="auth-button" type="submit" disabled={loading || retryDisabled}>
-            {loading ? 'Creating…' : retryDisabled ? 'Wait…' : 'Register'}
+          <button
+            className="auth-button"
+            type="submit"
+            disabled={loading || retryDisabled}
+          >
+            {loading ? "Creating…" : retryDisabled ? "Wait…" : "Register"}
           </button>
-          {authError && <p style={{ color: "red", marginTop: 12 }}>{authError}</p>}
-          {infoMessage && <p style={{ color: "green", marginTop: 12 }}>{infoMessage}</p>}
+          {authError && (
+            <p style={{ color: "red", marginTop: 12 }}>{authError}</p>
+          )}
+          {infoMessage && (
+            <p style={{ color: "green", marginTop: 12 }}>{infoMessage}</p>
+          )}
 
           {/* Option: create confirmed user via backend admin endpoint when signup is blocked */}
-          {((/rate limit|too many|confirm|verify|unverified|email not verified/i).test(authError) || /check your email/i.test(infoMessage) || retryDisabled) && (
+          {(/rate limit|too many|confirm|verify|unverified|email not verified/i.test(
+            authError,
+          ) ||
+            /check your email/i.test(infoMessage) ||
+            retryDisabled) && (
             <div style={{ marginTop: 12 }}>
-              <button className="auth-button" type="button" onClick={handleAdminCreate} disabled={adminLoading} style={{ background: '#333' }}>
-                {adminLoading ? 'Creating account…' : 'Create account now (bypass confirmation)'}
+              <button
+                className="auth-button"
+                type="button"
+                onClick={handleAdminCreate}
+                disabled={adminLoading}
+                style={{ background: "#333" }}
+              >
+                {adminLoading
+                  ? "Creating account…"
+                  : "Create account now (bypass confirmation)"}
               </button>
-              {adminError && <p style={{ color: 'red', marginTop: 8 }}>{adminError}</p>}
+              {adminError && (
+                <p style={{ color: "red", marginTop: 8 }}>{adminError}</p>
+              )}
             </div>
           )}
 

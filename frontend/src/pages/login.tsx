@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { supabase } from "../supabase/client";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { setAuthUser } from "../utils/auth";
 
 function Login() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,13 +26,19 @@ function Login() {
     e.preventDefault();
     setAuthError("");
     setLoading(true);
+
     try {
-      const res = await supabase.auth.signInWithPassword({ email, password });
-      console.log('signIn response', res);
-      const { error } = res;
-      if (error) {
-        setAuthError(error.message);
+      const res = await fetch("http://localhost:4000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAuthError(data?.error || "Login failed");
       } else {
+        setAuthUser(data.user);
         navigate('/journal');
       }
     } catch (err) {
@@ -45,33 +51,6 @@ function Login() {
 
   const handleTogglePassword = () => setShowPassword((s) => !s);
 
-  const handleForgot = async () => {
-    setAuthError("");
-    setInfoMessage("");
-    if (!email) {
-      setAuthError('Enter your email address to reset password');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await supabase.auth.resetPasswordForEmail(email);
-      console.log('resetPassword response', res);
-      // res may include error
-      // @ts-ignore
-      if (res?.error) {
-        // @ts-ignore
-        setAuthError(res.error.message || String(res.error));
-      } else {
-        setInfoMessage('Password reset email sent. Check your inbox.');
-      }
-    } catch (err) {
-      console.error(err);
-      setAuthError(String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -79,12 +58,12 @@ function Login() {
 
         <form onSubmit={handleLogin}>
           <div className="auth-input">
-            <label>Email</label>
+            <label>Email or Username</label>
             <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Enter your email or username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
             />
           </div>
 
@@ -98,15 +77,6 @@ function Login() {
             />
             <button type="button" onClick={handleTogglePassword} style={{ position: 'absolute', right: 8, top: 36, background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle password visibility">
               {showPassword ? '🙈' : '👁️'}
-            </button>
-          </div>
-
-          <div className="auth-options">
-            <label>
-              <input type="checkbox" /> Remember Me
-            </label>
-            <button type="button" onClick={handleForgot} style={{ background: 'none', border: 'none', color: '#ff8c00', cursor: 'pointer' }}>
-              Forget Password
             </button>
           </div>
 
