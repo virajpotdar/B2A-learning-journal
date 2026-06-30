@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { supabase } from "../supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
@@ -10,7 +9,6 @@ export default function Register() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -27,10 +25,9 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Requirement 10: Use backend admin-create endpoint for username persistence
-      // This bypasses email confirmation (Requirement 4) and rate limiting (Requirement 5)
+      // Use backend register endpoint for custom authentication
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const response = await fetch(`${backendUrl}/api/auth/admin-create`, {
+      const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +41,7 @@ export default function Register() {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // Requirement 4: Redirect to login with success message (no email confirmation required)
+      // Redirect to login with success message
       navigate("/login", { state: { message: "Registration successful! Please log in." } });
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
@@ -68,7 +65,7 @@ export default function Register() {
           </div>
           <div className="auth-input">
             <label>Password</label>
-            <input type={showPassword ? "text" : "password"} placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <div className="auth-input">
             <label>Confirm Password</label>

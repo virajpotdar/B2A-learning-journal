@@ -2,6 +2,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
 // 1. Load the secret keys from the .env file
@@ -9,6 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = 4000;
+const BCRYPT_SALT_ROUNDS = 10;
 
 app.use(cors());
 app.use(express.json());
@@ -55,7 +57,81 @@ app.post('/api/notes', async (req: Request, res: Response) => {
     return res.status(500).json({ error: error.message });
   }
 
-  res.status(201).json({ message: "Note saved permanently!", note: data[0] });
+  res.status(201).json({ message: "Note saved permanently!", note: data?.[0] || null });
+});
+
+// Register a new user in the custom users table
+app.post('/api/auth/register', async (req: Request, res: Response) => {
+  const { email, password, username } = req.body;
+  if (!email || !password || !username) {
+    return res.status(400).json({ error: 'email, username and password required' });
+  }
+
+  try {
+    const { data: existingUser, error: existingError } = await supabase
+      .from('users')
+      .select('id')
+      .or(`email.eq.${email},username.eq.${username}`)
+      .maybeSingle();
+
+    if (existingError) {
+      return res.status(500).json({ error: existingError.message });
+    }
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email or username already exists' });
+    }
+
+    const password_hash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ email, username, password_hash }])
+      .select('id, email, username')
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.status(201).json({ user: data });
+  } catch (err: any) {
+    console.error('register error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// Authenticate a user from the custom users table
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  const { identifier, password } = req.body;
+  if (!identifier || !password) {
+    return res.status(400).json({ error: 'identifier and password required' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, username, password_hash')
+      .or(`email.eq.${identifier},username.eq.${identifier}`)
+      .maybeSingle();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(401).json({ error: 'Invalid username/email or password' });
+    }
+
+    const isValid = await bcrypt.compare(password, data.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid username/email or password' });
+    }
+
+    res.json({ user: { id: data.id, email: data.email, username: data.username } });
+  } catch (err: any) {
+    console.error('login error', err);
+    res.status(500).json({ error: String(err) });
+  }
 });
 
 // Route C: Update an existing note
@@ -109,98 +185,4 @@ app.delete('/api/notes/:id', async (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
-});
-
-// Admin create user (avoids email confirmation and rate limits when using service role key)
-app.post('/api/auth/admin-create', async (req: Request, res: Response) => {
-  const { email, password, username } = req.body;
-  
-  // Requirement 9: Validate username is required
-  if (!email || !password || !username) {
-    return res.status(400).json({ error: 'email, password, and username are required' });
-  }
-
-  // Requirement 9: Validate username format
-  if (username.length < 3 || username.length > 30) {
-    return res.status(400).json({ error: 'Username must be between 3 and 30 characters' });
-  }
-  
-  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    return res.status(400).json({ error: 'Username can only contain alphanumeric characters, hyphens, and underscores' });
-  }
-
-  try {
-    // Requirement 9: Check username uniqueness in profiles table
-    const { data: existingProfile, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('full_name', username)
-      .single();
-    
-    if (existingProfile) {
-      return res.status(400).json({ error: 'Username is already taken' });
-    }
-
-    // Create user with Supabase admin API
-    const url = `${supabaseUrl}/auth/v1/admin/users`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify({ 
-        email, 
-        password, 
-        email_confirm: true,
-        user_metadata: { username }
-      }),
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) return res.status(resp.status).json(data);
-
-    // Requirement 9: Create profile with username
-    if (data.id) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{ 
-          id: data.id, 
-          email, 
-          full_name: username 
-        }]);
-      
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        // Continue anyway as user was created
-      }
-    }
-
-    return res.json(data);
-  } catch (err: any) {
-    console.error('admin-create error', err);
-    return res.status(500).json({ error: String(err) });
-  }
-});
-
-// Requirement 1: Check username uniqueness endpoint
-app.get('/api/auth/check-username/:username', async (req: Request, res: Response) => {
-  const { username } = req.params;
-  
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('full_name', username)
-      .single();
-    
-    if (data) {
-      return res.json({ available: false });
-    }
-    return res.json({ available: true });
-  } catch (err: any) {
-    // If no profile found, username is available
-    return res.json({ available: true });
-  }
 });

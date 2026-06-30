@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { supabase } from '../supabase/client';
+import { clearAuthUser, getAuthUser } from '../utils/auth';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -8,23 +8,14 @@ function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (mounted) setUser(data?.user ?? null);
-      } catch (e) {
-        console.error('getUser error', e);
-      }
-    })();
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => {
-      mounted = false;
-      try { sub?.subscription?.unsubscribe(); } catch {};
-    };
+    setUser(getAuthUser());
   }, []);
+
+  const handleLogout = () => {
+    clearAuthUser();
+    setUser(null);
+    navigate('/login');
+  };
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -143,8 +134,23 @@ function Navbar() {
           >
             Other
           </Link>
-          {/* Requirement 6: Remove logout button, only show Login link when not authenticated */}
-          {!user && (
+          {user ? (
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '0.55rem 1.2rem',
+                background: 'white',
+                color: '#ed771d',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              Logout
+            </button>
+          ) : (
             <Link 
               to="/login"
               style={{
@@ -271,7 +277,26 @@ function Navbar() {
         >
           Other
         </Link>
-        {!user && (
+        {user ? (
+          <button
+            onClick={() => {
+              handleLogout();
+              setMobileMenuOpen(false);
+            }}
+            style={{
+              padding: '0.75rem',
+              background: 'white',
+              color: '#ed771d',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              textAlign: 'center'
+            }}
+          >
+            Logout
+          </button>
+        ) : (
           <Link 
             to="/login"
             style={{
