@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { setAuthUser } from "../utils/auth";
@@ -13,12 +13,10 @@ function Login() {
   const location = useLocation();
 
   // show message passed from registration (if any)
-  useState(() => {
-    // @ts-ignore
+  useEffect(() => {
     const msg = location?.state?.message;
     if (msg) setInfoMessage(msg);
-    return;
-  });
+  }, [location]);
 
   const navigate = useNavigate();
 

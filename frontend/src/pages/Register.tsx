@@ -1,65 +1,28 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { supabase } from "../supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [authError, setAuthError] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [infoMessage, setInfoMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [adminError, setAdminError] = useState("");
-  const [retryDisabled, setRetryDisabled] = useState(false);
 
   const navigate = useNavigate();
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    setAuthError("");
-    setInfoMessage("");
-    setLoading(true);
-    if (password !== confirm) {
-      setAuthError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
+    setError("");
+    
+    // Requirement 1 & 10: Validation
+    if (!username) return setError("Username is required");
+    if (password !== confirm) return setError("Passwords do not match");
+    if (username.length < 3 || username.length > 30) return setError("Username must be 3-30 characters");
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) return setError("Username can only contain alphanumeric, hyphens, and underscores");
 
-    try {
-      const res = await supabase.auth.signUp({ email, password });
-      console.log("signUp response", res);
-      const { error } = res;
-      if (error) {
-        const msg = error.message || String(error);
-        setAuthError(msg);
-        // handle rate limit error by disabling retry for 60s
-        if (/rate limit/i.test(msg) || /too many requests/i.test(msg)) {
-          setRetryDisabled(true);
-          setInfoMessage(
-            "Too many signup attempts. Please wait 60 seconds before retrying.",
-          );
-          setTimeout(() => {
-            setRetryDisabled(false);
-            setInfoMessage("");
-          }, 60000);
-        }
-      } else {
-        // Successful signup — always redirect to login and inform user
-        const msg =
-          "Registration successful — please check your email to confirm your account (if required) and then log in.";
-        setInfoMessage(msg);
-        navigate("/login", { state: { message: msg } });
-      }
-    } catch (err) {
-      console.error(err);
-      setAuthError(String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+    setLoading(true);
 
   const handleAdminCreate = async () => {
     setAdminError("");
@@ -76,19 +39,19 @@ export default function Register() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      console.log("admin-create response", res.status, data);
-      if (!res.ok) {
-        setAdminError(data?.error || JSON.stringify(data));
-      } else {
-        // created and confirmed server-side
-        navigate("/journal");
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
-    } catch (err) {
-      console.error(err);
-      setAdminError(String(err));
+
+      // Redirect to login with success message
+      navigate("/login", { state: { message: "Registration successful! Please log in." } });
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
     } finally {
-      setAdminLoading(false);
+      setLoading(false);
     }
   };
 
@@ -98,92 +61,31 @@ export default function Register() {
         <h1>Register</h1>
         <form onSubmit={handleRegister}>
           <div className="auth-input">
+            <label>Username</label>
+            <input type="text" placeholder="Choose a username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          </div>
+          <div className="auth-input">
             <label>Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="auth-input">
             <label>Password</label>
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: "100%" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                style={{
-                  position: "absolute",
-                  right: 8,
-                  top: 8,
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-                aria-label="Toggle password visibility"
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
+            <input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <div className="auth-input">
             <label>Confirm Password</label>
-            <input
-              type="password"
-              placeholder="Confirm your password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
+            <input type="password" placeholder="Confirm password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
           </div>
-          <button
-            className="auth-button"
-            type="submit"
-            disabled={loading || retryDisabled}
-          >
-            {loading ? "Creating…" : retryDisabled ? "Wait…" : "Register"}
+
+          <button className="auth-button" type="submit" disabled={loading}>
+            {loading ? "Creating account..." : "Register"}
           </button>
-          {authError && (
-            <p style={{ color: "red", marginTop: 12 }}>{authError}</p>
-          )}
-          {infoMessage && (
-            <p style={{ color: "green", marginTop: 12 }}>{infoMessage}</p>
-          )}
 
-          {/* Option: create confirmed user via backend admin endpoint when signup is blocked */}
-          {(/rate limit|too many|confirm|verify|unverified|email not verified/i.test(
-            authError,
-          ) ||
-            /check your email/i.test(infoMessage) ||
-            retryDisabled) && (
-            <div style={{ marginTop: 12 }}>
-              <button
-                className="auth-button"
-                type="button"
-                onClick={handleAdminCreate}
-                disabled={adminLoading}
-                style={{ background: "#333" }}
-              >
-                {adminLoading
-                  ? "Creating account…"
-                  : "Create account now (bypass confirmation)"}
-              </button>
-              {adminError && (
-                <p style={{ color: "red", marginTop: 8 }}>{adminError}</p>
-              )}
-            </div>
-          )}
-
-          <div className="auth-footer">
-            Already have an account? <Link to="/login">Login</Link>
-          </div>
+          {error && <p style={{ color: "red", marginTop: 12 }}>{error}</p>}
         </form>
+        <div className="auth-footer">
+          Already have an account? <Link to="/login">Login</Link>
+        </div>
       </div>
     </div>
   );
