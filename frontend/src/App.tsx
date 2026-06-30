@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import FrontendPage from './pages/FrontendPage';
 import BackendPage from './pages/BackendPage';
+import OtherPage from './pages/OtherPage';
 import Login from './pages/login';
 import Register from './pages/Register';
 import Journal from './pages/Journal';
@@ -50,6 +51,7 @@ export default function App() {
                 <Route index element={<FrontendPage />} />
                 <Route path="frontend" element={<FrontendPage />} />
                 <Route path="backend" element={<BackendPage />} />
+                <Route path="other" element={<OtherPage />} />
                 <Route path="journal" element={<Journal />} />
               </Routes>
 

@@ -46,7 +46,29 @@ function Navbar() {
         alignItems: 'center',
         fontFamily: 'Arial, Verdana'
       }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Knowledge Journal</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.9)',
+              color: '#ed771d',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+            }}
+          >
+            ←
+          </button>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Knowledge Journal</h2>
+        </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link 
             to="/frontend"
@@ -93,6 +115,29 @@ function Navbar() {
             }}
           >
             Backend
+          </Link>
+          <Link 
+            to="/other"
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'white',
+              color: '#ed771d',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+            }}
+          >
+            Other
           </Link>
           {user ? (
             <button

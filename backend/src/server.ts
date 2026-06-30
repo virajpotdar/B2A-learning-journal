@@ -58,6 +58,55 @@ app.post('/api/notes', async (req: Request, res: Response) => {
   res.status(201).json({ message: "Note saved permanently!", note: data[0] });
 });
 
+// Route C: Update an existing note
+app.put('/api/notes/:id', async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const { title, content } = req.body;
+
+  if (!title && !content) {
+    return res.status(400).json({ error: 'Title or content is required to update the note.' });
+  }
+
+  const updatedFields: Record<string, unknown> = {};
+  if (title !== undefined) updatedFields.title = title;
+  if (content !== undefined) updatedFields.content = content;
+
+  const { data, error } = await supabase
+    .from('notes')
+    .update(updatedFields)
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: 'Note not found.' });
+  }
+
+  res.json({ message: 'Note updated successfully.', note: data[0] });
+});
+
+// Route D: Delete a note
+app.delete('/api/notes/:id', async (req: Request, res: Response) => {
+  const id = req.params.id;
+
+  const { data, error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: 'Note not found.' });
+  }
+
+  res.json({ message: 'Note deleted successfully.' });
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

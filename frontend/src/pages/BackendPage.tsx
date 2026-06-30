@@ -26,6 +26,39 @@ export default function BackendPage() {
     fetchNotes();
   }, []);
 
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/notes/${noteId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.status}`);
+      }
+      setNotes((current) => current.filter((note) => note.id !== noteId));
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  };
+
+  const handleUpdateNote = async (noteId: string, updatedData: { title: string; content: string }) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) {
+        throw new Error(`Update failed: ${response.status}`);
+      }
+      const result = await response.json();
+      setNotes((current) => current.map((note) => note.id === noteId ? { ...note, ...result.note } : note));
+    } catch (error) {
+      console.error('Failed to update note:', error);
+    }
+  };
+
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     note.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -103,7 +136,12 @@ export default function BackendPage() {
         ) : (
           <div style={{ display: 'grid', gap: '1.5rem' }}>
             {filteredNotes.map((note) => (
-              <NoteCard key={note.id} note={note} />
+              <NoteCard
+                key={note.id}
+                note={note}
+                onDelete={handleDeleteNote}
+                onUpdate={handleUpdateNote}
+              />
             ))}
           </div>
         )}
