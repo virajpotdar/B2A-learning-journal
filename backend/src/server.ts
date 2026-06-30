@@ -61,3 +61,29 @@ app.post('/api/notes', async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
+
+// Admin create user (avoids email confirmation and rate limits when using service role key)
+app.post('/api/auth/admin-create', async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+
+  try {
+    const url = `${supabaseUrl}/auth/v1/admin/users`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ email, password, email_confirm: true }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) return res.status(resp.status).json(data);
+    return res.json(data);
+  } catch (err: any) {
+    console.error('admin-create error', err);
+    return res.status(500).json({ error: String(err) });
+  }
+});
