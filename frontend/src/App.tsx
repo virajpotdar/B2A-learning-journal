@@ -29,6 +29,7 @@ export default function App() {
       const createOrUpdateProfile = async () => {
         try {
           const email = user.email;
+          if (!email) return;
           const username = user.name || user.nickname || email.split('@')[0];
           
           // Check if profile already exists
