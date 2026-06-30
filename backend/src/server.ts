@@ -113,10 +113,35 @@ app.listen(PORT, () => {
 
 // Admin create user (avoids email confirmation and rate limits when using service role key)
 app.post('/api/auth/admin-create', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'email and password required' });
+  const { email, password, username } = req.body;
+  
+  // Requirement 9: Validate username is required
+  if (!email || !password || !username) {
+    return res.status(400).json({ error: 'email, password, and username are required' });
+  }
+
+  // Requirement 9: Validate username format
+  if (username.length < 3 || username.length > 30) {
+    return res.status(400).json({ error: 'Username must be between 3 and 30 characters' });
+  }
+  
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return res.status(400).json({ error: 'Username can only contain alphanumeric characters, hyphens, and underscores' });
+  }
 
   try {
+    // Requirement 9: Check username uniqueness in profiles table
+    const { data: existingProfile, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('full_name', username)
+      .single();
+    
+    if (existingProfile) {
+      return res.status(400).json({ error: 'Username is already taken' });
+    }
+
+    // Create user with Supabase admin API
     const url = `${supabaseUrl}/auth/v1/admin/users`;
     const resp = await fetch(url, {
       method: 'POST',
@@ -125,14 +150,57 @@ app.post('/api/auth/admin-create', async (req: Request, res: Response) => {
         apikey: supabaseKey,
         Authorization: `Bearer ${supabaseKey}`,
       },
-      body: JSON.stringify({ email, password, email_confirm: true }),
+      body: JSON.stringify({ 
+        email, 
+        password, 
+        email_confirm: true,
+        user_metadata: { username }
+      }),
     });
 
     const data = await resp.json();
     if (!resp.ok) return res.status(resp.status).json(data);
+
+    // Requirement 9: Create profile with username
+    if (data.id) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{ 
+          id: data.id, 
+          email, 
+          full_name: username 
+        }]);
+      
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        // Continue anyway as user was created
+      }
+    }
+
     return res.json(data);
   } catch (err: any) {
     console.error('admin-create error', err);
     return res.status(500).json({ error: String(err) });
+  }
+});
+
+// Requirement 1: Check username uniqueness endpoint
+app.get('/api/auth/check-username/:username', async (req: Request, res: Response) => {
+  const { username } = req.params;
+  
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('full_name', username)
+      .single();
+    
+    if (data) {
+      return res.json({ available: false });
+    }
+    return res.json({ available: true });
+  } catch (err: any) {
+    // If no profile found, username is available
+    return res.json({ available: true });
   }
 });
