@@ -134,6 +134,142 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
+// Generate a 6-digit OTP
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Send OTP for password reset
+app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Check if user exists
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (userError) {
+      return res.status(500).json({ error: userError.message });
+    }
+
+    if (!user) {
+      // Don't reveal if email exists for security
+      return res.json({ message: 'If the email exists, an OTP will be sent' });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+
+    // Store OTP in database
+    const { error: otpError } = await supabase
+      .from('password_resets')
+      .insert([{ email, otp, expires_at: expiresAt }]);
+
+    if (otpError) {
+      return res.status(500).json({ error: otpError.message });
+    }
+
+    // Log OTP to console (in production, send via email service like SendGrid/Nodemailer)
+    console.log(`OTP for ${email}: ${otp} (expires at ${expiresAt})`);
+
+    res.json({ message: 'OTP sent successfully' });
+  } catch (err: any) {
+    console.error('forgot password error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// Verify OTP
+app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and OTP are required' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('password_resets')
+      .select('*')
+      .eq('email', email)
+      .eq('otp', otp)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    res.json({ message: 'OTP verified successfully' });
+  } catch (err: any) {
+    console.error('verify otp error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// Reset password with OTP
+app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+  const { email, otp, newPassword } = req.body;
+  if (!email || !otp || !newPassword) {
+    return res.status(400).json({ error: 'Email, OTP, and new password are required' });
+  }
+
+  try {
+    // Verify OTP and mark as used
+    const { data: otpData, error: otpError } = await supabase
+      .from('password_resets')
+      .select('*')
+      .eq('email', email)
+      .eq('otp', otp)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (otpError) {
+      return res.status(500).json({ error: otpError.message });
+    }
+
+    if (!otpData) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    // Hash new password
+    const password_hash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+
+    // Update user password
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password_hash })
+      .eq('email', email);
+
+    if (updateError) {
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    // Mark OTP as used
+    await supabase
+      .from('password_resets')
+      .update({ used: true })
+      .eq('id', otpData.id);
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (err: any) {
+    console.error('reset password error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 // Route C: Update an existing note
 app.put('/api/notes/:id', async (req: Request, res: Response) => {
   const id = req.params.id;

@@ -1,20 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { clearAuthUser, getAuthUser } from '../utils/auth';
+import { useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 function Navbar() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { isAuthenticated, user, logout } = useAuth0();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setUser(getAuthUser());
-  }, []);
-
   const handleLogout = () => {
-    clearAuthUser();
-    setUser(null);
-    navigate('/login');
+    logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   const toggleMobileMenu = () => {
@@ -280,7 +274,7 @@ function Navbar() {
         >
           Other
         </Link>
-        {user ? (
+        {isAuthenticated ? (
           <button
             onClick={() => {
               handleLogout();

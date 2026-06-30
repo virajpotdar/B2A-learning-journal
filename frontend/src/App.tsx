@@ -15,6 +15,7 @@ import OtherPage from "./pages/OtherPage";
 import Login from "./pages/login";
 import Register from "./pages/Register";
 import Journal from "./pages/Journal";
+import ForgotPassword from "./pages/ForgotPassword";
 
 export default function App() {
   // 1. Bring in the Auth0 hook to check the user's status
@@ -29,6 +30,7 @@ export default function App() {
       const createOrUpdateProfile = async () => {
         try {
           const email = user.email;
+          if (!email) return;
           const username = user.name || user.nickname || email.split('@')[0];
           
           // Check if profile already exists
@@ -112,6 +114,7 @@ export default function App() {
             isAuthenticated ? <Navigate to="/journal" replace /> : <Register />
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Main website pages WITH Navbar */}
         <Route
