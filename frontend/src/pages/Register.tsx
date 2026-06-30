@@ -24,15 +24,20 @@ export default function Register() {
 
     setLoading(true);
 
+  const handleAdminCreate = async () => {
+    setAdminError("");
+    setInfoMessage("");
+    if (!email || !password) {
+      setAdminError("Email and password are required");
+      return;
+    }
+    setAdminLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
     try {
-      // Use backend register endpoint for custom authentication
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const response = await fetch(`${backendUrl}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, username }),
+      const res = await fetch(`${apiUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();

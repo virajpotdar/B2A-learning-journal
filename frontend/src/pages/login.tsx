@@ -48,6 +48,7 @@ function Login() {
   };
 
   const handleTogglePassword = () => setShowPassword((s) => !s);
+
   return (
     <div className="auth-page">
       <div className="auth-card">
