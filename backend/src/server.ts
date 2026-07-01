@@ -270,6 +270,155 @@ app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
   }
 });
 
+// Generate a unique share ID for a learning path
+function generateShareId(): string {
+  return Math.random().toString(36).substring(2, 10) + 
+         Math.random().toString(36).substring(2, 10);
+}
+
+// Create a share link for a learning path
+app.post('/api/share/create', async (req: Request, res: Response) => {
+  const { category, userId } = req.body;
+  if (!category || !userId) {
+    return res.status(400).json({ error: 'Category and userId are required' });
+  }
+
+  try {
+    const shareId = generateShareId();
+    
+    // Get all notes for this category
+    const { data: notes, error: notesError } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('category', category);
+
+    if (notesError) {
+      return res.status(500).json({ error: notesError.message });
+    }
+
+    if (!notes || notes.length === 0) {
+      return res.status(404).json({ error: 'No notes found for this category' });
+    }
+
+    // Store the share data
+    const { data: shareData, error: shareError } = await supabase
+      .from('shared_paths')
+      .insert({
+        share_id: shareId,
+        category,
+        user_id: userId,
+        notes_data: notes,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (shareError) {
+      return res.status(500).json({ error: shareError.message });
+    }
+
+    res.json({ 
+      shareId, 
+      shareUrl: `${req.protocol}://${req.get('host')}/share/${shareId}`,
+      category,
+      topicCount: notes.length 
+    });
+  } catch (err: any) {
+    console.error('create share error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// Get shared learning path data
+app.get('/api/share/:shareId', async (req: Request, res: Response) => {
+  const { shareId } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('shared_paths')
+      .select('*')
+      .eq('share_id', shareId)
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Shared path not found' });
+    }
+
+    res.json({
+      category: data.category,
+      notes: data.notes_data,
+      topicCount: data.notes_data?.length || 0,
+      createdAt: data.created_at,
+    });
+  } catch (err: any) {
+    console.error('get share error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// Import/copy a shared learning path
+app.post('/api/share/:shareId/import', async (req: Request, res: Response) => {
+  const { shareId } = req.params;
+  const { userId, newCategory } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    // Get the shared path data
+    const { data: shareData, error: shareError } = await supabase
+      .from('shared_paths')
+      .select('*')
+      .eq('share_id', shareId)
+      .single();
+
+    if (shareError) {
+      return res.status(500).json({ error: shareError.message });
+    }
+
+    if (!shareData) {
+      return res.status(404).json({ error: 'Shared path not found' });
+    }
+
+    // Create independent copies of all notes with new IDs
+    const importedNotes = [];
+    for (const note of shareData.notes_data) {
+      const { data: newNote, error: insertError } = await supabase
+        .from('notes')
+        .insert({
+          title: note.title,
+          content: note.content,
+          category: newCategory || shareData.category,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error importing note:', insertError);
+        continue;
+      }
+
+      importedNotes.push(newNote);
+    }
+
+    res.json({ 
+      message: 'Learning path imported successfully',
+      topicCount: importedNotes.length,
+      category: newCategory || shareData.category,
+    });
+  } catch (err: any) {
+    console.error('import share error', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 // Route C: Update an existing note
 app.put('/api/notes/:id', async (req: Request, res: Response) => {
   const id = req.params.id;

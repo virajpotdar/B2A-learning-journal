@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createNote } from '../services/notesApi';
 
 interface NoteFormProps {
   onNoteAdded: () => void;
@@ -8,27 +9,26 @@ interface NoteFormProps {
 export default function NoteForm({ onNoteAdded, category }: NoteFormProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-  
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+
     const newNote = { title, content, category };
     try {
-      await fetch('http://localhost:4000/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newNote),
-      });
-
-      // 3. Clear the form
+      await createNote(newNote);
       setTitle('');
       setContent('');
-
-      // 4. Refresh the list so the new note shows up immediately!
       onNoteAdded();
-
-    } catch (error) {
-      console.error("Failed to save note:", error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save note';
+      setError(message);
+      console.error('Failed to save note:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -81,7 +81,8 @@ export default function NoteForm({ onNoteAdded, category }: NoteFormProps) {
           onBlur={(e) => e.currentTarget.style.borderColor = '#e0e0e0'}
         />
         <button 
-          type="submit" 
+          type="submit"
+          disabled={saving}
           style={{ 
             background: 'linear-gradient(135deg, #ed771d 0%, #f5a623 100%)',
             color: 'white',
@@ -103,8 +104,11 @@ export default function NoteForm({ onNoteAdded, category }: NoteFormProps) {
             e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
           }}
         >
-          Save Note
+          {saving ? 'Saving...' : 'Save Note'}
         </button>
+        {error && (
+          <p style={{ margin: 0, color: '#dc2626', fontSize: '0.9rem' }}>{error}</p>
+        )}
       </div>
     </form>
   );

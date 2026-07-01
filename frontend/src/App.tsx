@@ -6,144 +6,137 @@ import {
 } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect } from "react";
+import { Box, CircularProgress } from "@mui/material";
 import { supabase } from "./supabase/client";
 
 import Navbar from "./components/Navbar";
-import FrontendPage from "./pages/FrontendPage";
-import BackendPage from "./pages/BackendPage";
-import OtherPage from "./pages/OtherPage";
-import Login from "./pages/login";
-import Register from "./pages/Register";
 import Journal from "./pages/Journal";
 import ForgotPassword from "./pages/ForgotPassword";
+import RoadmapPage from "./pages/RoadmapPage";
+import SharedPathPage from "./pages/SharedPathPage";
+import JoinGroup from "./pages/JoinGroup";
+import GroupDashboard from "./pages/GroupDashboard";
+import SearchDialog from "./components/SearchDialog";
+import { SearchProvider } from "./context/SearchContext";
+import Login from "./pages/login";
 
 export default function App() {
-  // 1. Bring in the Auth0 hook to check the user's status
   const { isAuthenticated, isLoading, user } = useAuth0();
 
-  // 2. Requirement 8: Create OAuth user profile in Supabase when user authenticates via Google
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log("Auth0 Google Login Successful!", user);
-      
-      // Create or retrieve user profile in Supabase
       const createOrUpdateProfile = async () => {
         try {
           const email = user.email;
           if (!email) return;
           const username = user.name || user.nickname || email.split('@')[0];
-          
-          // Check if profile already exists
+
           const { data: existingProfile } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', email)
             .single();
-          
+
           if (!existingProfile) {
-            // Create new profile for OAuth user
             const { error: profileError } = await supabase
               .from('profiles')
-              .insert([{ 
-                email, 
+              .insert([{
+                email,
                 full_name: username,
-                // Store Auth0 user ID as metadata for provider identification
                 auth_provider: 'auth0',
-                auth_provider_id: user.sub
+                auth_provider_id: user.sub || email,
+                avatar_url: user.picture,
               }]);
-            
+
             if (profileError) {
               console.error('Error creating OAuth user profile:', profileError);
             } else {
-              console.log('OAuth user profile created successfully');
+              console.log('Profile created successfully for:', email);
             }
-          } else {
-            console.log('OAuth user profile already exists');
           }
         } catch (error) {
           console.error('Error in OAuth profile creation:', error);
         }
       };
-      
+
       createOrUpdateProfile();
     }
   }, [isAuthenticated, user]);
 
-  // 3. Show a loading screen while Auth0 checks if they are logged in
   if (isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <h2>Loading...</h2>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <Router>
-      <Routes>
-        {/* Redirect root to login, UNLESS they are already authenticated */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/journal" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+    <SearchProvider>
+      <Router>
+        <SearchDialog />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/journal" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
 
-        {/* Login and Register pages */}
-        {/* If they are already logged in, push them directly to the journal */}
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/journal" replace /> : <Login />
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isAuthenticated ? <Navigate to="/journal" replace /> : <Register />
-          }
-        />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/journal" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/journal" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/share/:shareId" element={<SharedPathPage />} />
+          <Route path="/group/join/:inviteCode" element={<JoinGroup />} />
 
-        {/* Main website pages WITH Navbar */}
-        <Route
-          path="/*"
-          element={
-            <>
-              <Navbar />
-              <Routes>
-                <Route index element={<FrontendPage />} />
-                <Route path="frontend" element={<FrontendPage />} />
-                <Route path="backend" element={<BackendPage />} />
-                <Route path="other" element={<OtherPage />} />
+          <Route
+            path="/*"
+            element={
+              <>
+                <Navbar />
+                <Routes>
+                  <Route index element={<Navigate to="/journal" replace />} />
+                  <Route path="journal" element={
+                    isAuthenticated ? <Journal /> : <Navigate to="/login" replace />
+                  } />
+                  <Route path="roadmap/:slug" element={<RoadmapPage />} />
+                  <Route path="group/:groupId" element={
+                    isAuthenticated ? <GroupDashboard /> : <Navigate to="/login" replace />
+                  } />
 
-                {/* Protect the Journal - only let them in if Auth0 says yes */}
-                <Route
-                  path="journal"
-                  element={
-                    isAuthenticated ? (
-                      <Journal />
-                    ) : (
-                      <Navigate to="/login" replace />
-                    )
-                  }
-                />
-              </Routes>
-            </>
-          }
-        />
-      </Routes>
-    </Router>
+                  {/* Legacy route redirects */}
+                  <Route path="frontend" element={<Navigate to="/roadmap/frontend" replace />} />
+                  <Route path="backend" element={<Navigate to="/roadmap/backend" replace />} />
+                  <Route path="other" element={<Navigate to="/roadmap/other" replace />} />
+                  <Route path="graph" element={<Navigate to="/roadmap/frontend" replace />} />
+                </Routes>
+              </>
+            }
+          />
+        </Routes>
+      </Router>
+    </SearchProvider>
   );
 }
