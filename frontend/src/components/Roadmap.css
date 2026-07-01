@@ -1,0 +1,102 @@
+/* Roadmap Styles - Clean Document Layout */
+
+.roadmap-container {
+  width: 100%;
+  min-height: 100vh;
+  background: transparent;
+  position: relative;
+}
+
+.roadmap-loading {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.loading-spinner {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.roadmap-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+.roadmap-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roadmap-node-wrapper {
+  position: relative;
+}
+
+.roadmap-children {
+  margin-left: 24px;
+  padding-left: 24px;
+  border-left: 2px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.roadmap-children::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  width: 2px;
+  height: 24px;
+  background: #e5e7eb;
+}
+
+/* SVG Connector */
+.roadmap-connector {
+  position: relative;
+  height: 24px;
+  width: 100%;
+}
+
+.connector-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.connector-line {
+  stroke: #e5e7eb;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .roadmap-content {
+    padding: 16px 12px;
+  }
+
+  .roadmap-children {
+    margin-left: 16px;
+    padding-left: 16px;
+    gap: 12px;
+  }
+
+  .roadmap-tree {
+    gap: 12px;
+  }
+}

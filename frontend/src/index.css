@@ -9,9 +9,6 @@
 }
 
 body {
-  background: url('/image.png') center center fixed no-repeat;
-  background-size: cover;
-  color: #333;
   min-height: 100vh;
 }
 

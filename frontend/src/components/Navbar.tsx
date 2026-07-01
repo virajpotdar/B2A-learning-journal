@@ -1,317 +1,214 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Box,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  useMediaQuery,
+  useTheme,
+  TextField,
+  Avatar,
+  InputAdornment,
+  Button,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Search,
+  DarkMode,
+  LightMode,
+  School,
+  ArrowBack,
+} from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useThemeMode } from '../theme/AppThemeProvider';
+import { useSearch } from '../context/SearchContext';
+import ProfileDropdown from './ProfileDropdown';
 
-function Navbar() {
+export default function Navbar() {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth0();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { mode, toggleMode } = useThemeMode();
+  const { openSearch } = useSearch();
+  const { isAuthenticated, user } = useAuth0();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<HTMLElement | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleLogout = () => {
-    logout({ logoutParams: { returnTo: window.location.origin } });
+  const showBackButton = location.pathname !== '/journal' && location.pathname !== '/login' && isAuthenticated;
+
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
-    <nav style={{ 
-      padding: '1rem 1.5rem', 
-      background: 'linear-gradient(135deg, #ed771d 0%, #f5a623 100%)', 
-      color: 'white',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-    }}>
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        fontFamily: 'Arial, Verdana'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              border: 'none',
-              background: 'rgba(255,255,255,0.9)',
-              color: '#ed771d',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
-            }}
-          >
-            ←
-          </button>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold' }}>Knowledge Journal</h2>
-        </div>
-        
-        {/* Desktop Navigation */}
-        <div className="desktop-nav" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Link 
-            to="/frontend"
-            style={{
-              padding: '0.6rem 1.2rem',
-              background: 'white',
-              color: '#ed771d',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              fontSize: '0.9rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            Frontend
-          </Link>
-          <Link 
-            to="/backend"
-            style={{
-              padding: '0.6rem 1.2rem',
-              background: 'white',
-              color: '#ed771d',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              fontSize: '0.9rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            Backend
-          </Link>
-          <Link 
-            to="/other"
-            style={{
-              padding: '0.6rem 1.2rem',
-              background: 'white',
-              color: '#ed771d',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              fontSize: '0.9rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            Other
-          </Link>
-          {user ? (
-            <>
-              <span style={{ color: 'white', fontWeight: 'bold' }}>{user.username || user.email}</span>
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '0.55rem 1.2rem',
-                  background: 'white',
-                  color: '#ed771d',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link 
-              to="/login"
-              style={{
-                padding: '0.6rem 1.2rem',
-                background: 'white',
-                color: '#ed771d',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                fontSize: '0.9rem'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-              }}
-            >
-              Login
-            </Link>
-          )}
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="mobile-menu-btn"
-          onClick={toggleMobileMenu}
-          style={{
-            display: 'none',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '32px',
-            height: '32px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            gap: '4px'
-          }}
-        >
-          <span style={{
-            width: '24px',
-            height: '3px',
-            background: 'white',
-            borderRadius: '2px',
-            transition: 'all 0.3s'
-          }}></span>
-          <span style={{
-            width: '24px',
-            height: '3px',
-            background: 'white',
-            borderRadius: '2px',
-            transition: 'all 0.3s'
-          }}></span>
-          <span style={{
-            width: '24px',
-            height: '3px',
-            background: 'white',
-            borderRadius: '2px',
-            transition: 'all 0.3s'
-          }}></span>
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <div 
-        className="mobile-menu"
-        style={{
-          display: mobileMenuOpen ? 'flex' : 'none',
-          flexDirection: 'column',
-          gap: '0.5rem',
-          marginTop: '1rem',
-          padding: '1rem',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '8px'
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+          color: 'text.primary',
         }}
       >
-        <Link 
-          to="/frontend"
-          style={{
-            padding: '0.75rem',
-            background: 'white',
-            color: '#ed771d',
-            textDecoration: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            textAlign: 'center'
-          }}
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          Frontend
-        </Link>
-        <Link 
-          to="/backend"
-          style={{
-            padding: '0.75rem',
-            background: 'white',
-            color: '#ed771d',
-            textDecoration: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            textAlign: 'center'
-          }}
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          Backend
-        </Link>
-        <Link 
-          to="/other"
-          style={{
-            padding: '0.75rem',
-            background: 'white',
-            color: '#ed771d',
-            textDecoration: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            textAlign: 'center'
-          }}
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          Other
-        </Link>
-        {isAuthenticated ? (
-          <button
-            onClick={() => {
-              handleLogout();
-              setMobileMenuOpen(false);
-            }}
-            style={{
-              padding: '0.75rem',
-              background: 'white',
-              color: '#ed771d',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              textAlign: 'center'
-            }}
-          >
-            Logout
-          </button>
-        ) : (
-          <Link 
-            to="/login"
-            style={{
-              padding: '0.75rem',
-              background: 'white',
-              color: '#ed771d',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              textAlign: 'center'
-            }}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Login
-          </Link>
-        )}
-      </div>
-    </nav>
+        <Toolbar sx={{ maxWidth: 1400, width: '100%', mx: 'auto', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {showBackButton && (
+              <IconButton
+                onClick={() => navigate(-1)}
+                sx={{ mr: 0.5 }}
+                size="small"
+              >
+                <ArrowBack />
+              </IconButton>
+            )}
+            <School sx={{ color: 'primary.main', fontSize: 28 }} />
+            <Typography
+              variant="h6"
+              component={Link}
+              to={isAuthenticated ? '/journal' : '/login'}
+              sx={{
+                fontWeight: 800,
+                textDecoration: 'none',
+                color: 'inherit',
+              }}
+            >
+              LearnPath
+            </Typography>
+          </Box>
+
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
+            {!isMobile && (
+              <TextField
+                placeholder="Search learning paths, topics..."
+                size="small"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  width: 400,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'background.default',
+                    transition: 'box-shadow 0.2s',
+                    '&:hover': {
+                      boxShadow: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? '0 0 0 1px rgba(255,255,255,0.1)'
+                          : '0 0 0 1px rgba(0,0,0,0.1)',
+                    },
+                    '&.Mui-focused': {
+                      boxShadow: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? '0 0 0 2px rgba(99, 102, 241, 0.5)'
+                          : '0 0 0 2px rgba(99, 102, 241, 0.3)',
+                    },
+                  },
+                }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+           
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton onClick={toggleMode} size="small">
+              {mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+            </IconButton>
+
+            {isAuthenticated ? (
+              <>
+                <Avatar
+                  src={user?.picture}
+                  onClick={handleProfileClick}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: 'primary.main',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                >
+                  {getInitials(user?.name)}
+                </Avatar>
+                <ProfileDropdown
+                  anchorEl={profileAnchorEl}
+                  open={Boolean(profileAnchorEl)}
+                  onClose={handleProfileClose}
+                />
+              </>
+            ) : (
+              !isMobile && (
+                <Button component={Link} to="/login" variant="contained" size="small">
+                  Login
+                </Button>
+              )
+            )}
+
+            {isMobile && (
+              <IconButton onClick={() => setDrawerOpen(true)}>
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Box sx={{ width: 280, pt: 2 }}>
+          <List>
+            <ListItemButton onClick={() => { openSearch(); setDrawerOpen(false); }}>
+              <Search sx={{ mr: 2 }} />
+              <ListItemText primary="Search" />
+            </ListItemButton>
+            {isAuthenticated && (
+              <ListItemButton onClick={handleProfileClick}>
+                <ListItemText primary="Profile" />
+              </ListItemButton>
+            )}
+            {!isAuthenticated && (
+              <ListItemButton component={Link} to="/login" onClick={() => setDrawerOpen(false)}>
+                <ListItemText primary="Login" />
+              </ListItemButton>
+            )}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 }
-export default Navbar;
