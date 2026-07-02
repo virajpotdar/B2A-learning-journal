@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Register() {
@@ -11,8 +11,6 @@ export default function Register() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,24 +26,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Use backend register endpoint for custom authentication
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const response = await fetch(`${backendUrl}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, username }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-
-      // Redirect to login with success message
-      navigate("/login", { state: { message: "Registration successful! Please log in." } });
+      // Use Auth0 for registration
+      await loginWithPopup({ authorizationParams: { screen_hint: 'signup' } });
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
     } finally {

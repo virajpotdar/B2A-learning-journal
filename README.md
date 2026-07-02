@@ -217,13 +217,15 @@ The project includes CI/CD workflows:
 ## Recent Updates
 
 ### Latest Changes
--  **Individual Topic Bookmarking** - Users can now bookmark specific topics within learning paths
--  **Bookmark Dialog** - Clean popup interface for accessing bookmarked topics
--  **Supabase Integration** - Migrated notes storage from local backend to Supabase
--  **Swagger Documentation** - Added comprehensive API documentation
--  **Bug Fixes** - Fixed group deletion, search bar, and bookmark display issues
--  **TypeScript Fixes** - Resolved Material UI v6 compatibility issues
--  **GitHub Actions** - Set up CI/CD pipeline for automated testing and deployment
+- ✅ **Individual Topic Bookmarking** - Users can now bookmark specific topics within learning paths
+- ✅ **Bookmark Dialog** - Clean popup interface for accessing bookmarked topics
+- ✅ **Supabase Integration** - Migrated notes storage from local backend to Supabase
+- ✅ **Swagger Documentation** - Added comprehensive API documentation
+- ✅ **Bug Fixes** - Fixed group deletion, search bar, and bookmark display issues
+- ✅ **TypeScript Fixes** - Resolved Material UI v6 compatibility issues
+- ✅ **GitHub Actions** - Set up CI/CD pipeline for automated testing and deployment
+- ✅ **QA Environment** - Set up QA environment with automated deployment
+- ✅ **Testing Infrastructure** - Added Vitest for unit tests and Playwright for E2E tests
 
 ### Architecture Decisions
 - **No CQRS** - Using traditional CRUD pattern for simplicity

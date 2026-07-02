@@ -4,6 +4,8 @@ import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 
 // 1. Load the secret keys from the .env file
 dotenv.config();
@@ -15,6 +17,28 @@ const BCRYPT_SALT_ROUNDS = 10;
 app.use(cors());
 app.use(express.json());
 
+// Swagger Configuration
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Learning Journal API',
+      version: '1.0.0',
+      description: 'API documentation for Learning Journal backend',
+    },
+    servers: [
+      {
+        url: 'http://localhost:4000',
+        description: 'Development server',
+      },
+    ],
+  },
+  apis: ['./src/server.ts'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // 2. Connect to the Supabase Filing Cabinet
 const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_KEY as string;
@@ -22,7 +46,24 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 3. The Menu (Now connected to real data!)
 
-// Route A: Get all notes from Supabase
+/**
+ * @swagger
+ * /api/notes:
+ *   get:
+ *     summary: Get all notes
+ *     tags: [Notes]
+ *     responses:
+ *       200:
+ *         description: List of all notes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Server error
+ */
 app.get('/api/notes', async (req: Request, res: Response) => {
   // Go to the 'notes' table and select all columns (*)
   const { data, error } = await supabase
@@ -37,7 +78,31 @@ app.get('/api/notes', async (req: Request, res: Response) => {
   res.json(data || []);
 });
 
-// Route B: Save a new note to Supabase
+/**
+ * @swagger
+ * /api/notes:
+ *   post:
+ *     summary: Create a new note
+ *     tags: [Notes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Note created successfully
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/notes', async (req: Request, res: Response) => {
   const newNote = req.body;
 
@@ -60,7 +125,35 @@ app.post('/api/notes', async (req: Request, res: Response) => {
   res.status(201).json({ message: "Note saved permanently!", note: data?.[0] || null });
 });
 
-// Register a new user in the custom users table
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Missing required fields
+ *       409:
+ *         description: Email or username already exists
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/auth/register', async (req: Request, res: Response) => {
   const { email, password, username } = req.body;
   if (!email || !password || !username) {
@@ -100,7 +193,34 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
   }
 });
 
-// Authenticate a user from the custom users table
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               identifier:
+ *                 type: string
+ *                 description: Email or username
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   const { identifier, password } = req.body;
   if (!identifier || !password) {
@@ -139,7 +259,29 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Send OTP for password reset
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset OTP
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Email required
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email) {
@@ -186,7 +328,31 @@ app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
   }
 });
 
-// Verify OTP
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP for password reset
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *       400:
+ *         description: Invalid or expired OTP
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
   const { email, otp } = req.body;
   if (!email || !otp) {
@@ -218,7 +384,33 @@ app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
   }
 });
 
-// Reset password with OTP
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with OTP
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid OTP or missing fields
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body;
   if (!email || !otp || !newPassword) {
@@ -276,7 +468,33 @@ function generateShareId(): string {
          Math.random().toString(36).substring(2, 10);
 }
 
-// Create a share link for a learning path
+/**
+ * @swagger
+ * /api/share/create:
+ *   post:
+ *     summary: Create a share link for a learning path
+ *     tags: [Sharing]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Share link created successfully
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: No notes found for this category
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/share/create', async (req: Request, res: Response) => {
   const { category, userId } = req.body;
   if (!category || !userId) {
@@ -329,7 +547,26 @@ app.post('/api/share/create', async (req: Request, res: Response) => {
   }
 });
 
-// Get shared learning path data
+/**
+ * @swagger
+ * /api/share/{shareId}:
+ *   get:
+ *     summary: Get shared learning path data
+ *     tags: [Sharing]
+ *     parameters:
+ *       - in: path
+ *         name: shareId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Shared path data retrieved successfully
+ *       404:
+ *         description: Shared path not found
+ *       500:
+ *         description: Server error
+ */
 app.get('/api/share/:shareId', async (req: Request, res: Response) => {
   const { shareId } = req.params;
 
@@ -360,7 +597,39 @@ app.get('/api/share/:shareId', async (req: Request, res: Response) => {
   }
 });
 
-// Import/copy a shared learning path
+/**
+ * @swagger
+ * /api/share/{shareId}/import:
+ *   post:
+ *     summary: Import a shared learning path
+ *     tags: [Sharing]
+ *     parameters:
+ *       - in: path
+ *         name: shareId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               newCategory:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Learning path imported successfully
+ *       400:
+ *         description: Missing userId
+ *       404:
+ *         description: Shared path not found
+ *       500:
+ *         description: Server error
+ */
 app.post('/api/share/:shareId/import', async (req: Request, res: Response) => {
   const { shareId } = req.params;
   const { userId, newCategory } = req.body;
@@ -419,7 +688,39 @@ app.post('/api/share/:shareId/import', async (req: Request, res: Response) => {
   }
 });
 
-// Route C: Update an existing note
+/**
+ * @swagger
+ * /api/notes/{id}:
+ *   put:
+ *     summary: Update an existing note
+ *     tags: [Notes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Note updated successfully
+ *       400:
+ *         description: No fields to update
+ *       404:
+ *         description: Note not found
+ *       500:
+ *         description: Server error
+ */
 app.put('/api/notes/:id', async (req: Request, res: Response) => {
   const id = req.params.id;
   const { title, content } = req.body;
@@ -448,7 +749,26 @@ app.put('/api/notes/:id', async (req: Request, res: Response) => {
   res.json({ message: 'Note updated successfully.', note: data[0] });
 });
 
-// Route D: Delete a note
+/**
+ * @swagger
+ * /api/notes/{id}:
+ *   delete:
+ *     summary: Delete a note
+ *     tags: [Notes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Note deleted successfully
+ *       404:
+ *         description: Note not found
+ *       500:
+ *         description: Server error
+ */
 app.delete('/api/notes/:id', async (req: Request, res: Response) => {
   const id = req.params.id;
 

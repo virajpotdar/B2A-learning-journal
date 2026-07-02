@@ -29,7 +29,7 @@ interface Note {
   title: string;
   content: string;
   category: string;
-  created_at: string;
+  created_at?: string;
 }
 
 const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ category }) => {
@@ -64,9 +64,8 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ category }) => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const response = await fetch(`${backendUrl}/api/notes`);
-      const notes: Note[] = await response.json();
+      const { fetchNotes } = await import('../services/notesApi');
+      const notes = await fetchNotes();
 
       // Filter by category if provided
       const filteredNotes = category 
