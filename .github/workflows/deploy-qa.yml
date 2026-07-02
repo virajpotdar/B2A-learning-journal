@@ -28,7 +28,7 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     environment: qa
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -37,5 +37,4 @@ jobs:
       uses: johnbeynon/render-deploy-action@v0.0.8
       with:
         service-id: ${{ secrets.RENDER_QA_SERVICE_ID }}
-        render-api-key: ${{ secrets.RENDER_API_KEY }}
-        wait-for-success: true
+        api-key: ${{ secrets.RENDER_API_KEY }}
