@@ -6,9 +6,13 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import { initializeTelemetry, logToGrafana } from './telemetry';
 
 // 1. Load the secret keys from the .env file
 dotenv.config();
+
+// 2. Initialize logging system
+initializeTelemetry();
 
 const app = express();
 const PORT = 4000;
@@ -65,6 +69,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
  *         description: Server error
  */
 app.get('/api/notes', async (req: Request, res: Response) => {
+  logToGrafana('info', 'GET /api/notes called', { ip: req.ip });
+  
   // Go to the 'notes' table and select all columns (*)
   const { data, error } = await supabase
     .from('notes')
@@ -72,9 +78,11 @@ app.get('/api/notes', async (req: Request, res: Response) => {
     .order('created_at', { ascending: false }); // Show newest first
 
   if (error) {
+    logToGrafana('error', 'Failed to fetch notes', { error: error.message });
     return res.status(500).json({ error: error.message });
   }
   
+  logToGrafana('info', 'Successfully fetched notes', { count: data?.length || 0 });
   res.json(data || []);
 });
 
@@ -104,6 +112,8 @@ app.get('/api/notes', async (req: Request, res: Response) => {
  *         description: Server error
  */
 app.post('/api/notes', async (req: Request, res: Response) => {
+  logToGrafana('info', 'POST /api/notes called', { ip: req.ip });
+  
   const newNote = req.body;
 
   // Insert the new note into the 'notes' table
@@ -119,9 +129,11 @@ app.post('/api/notes', async (req: Request, res: Response) => {
     .select(); // Ask Supabase to return the newly created row
 
   if (error) {
+    logToGrafana('error', 'Failed to create note', { error: error.message });
     return res.status(500).json({ error: error.message });
   }
 
+  logToGrafana('info', 'Successfully created note', { noteId: data?.[0]?.id });
   res.status(201).json({ message: "Note saved permanently!", note: data?.[0] || null });
 });
 
@@ -790,4 +802,5 @@ app.delete('/api/notes/:id', async (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  logToGrafana('info', 'Backend server started', { port: PORT, env: process.env.DEPLOYMENT_ENV || 'local' });
 });
