@@ -17,6 +17,7 @@
     "@mui/icons-material": "^9.1.1",
     "@mui/material": "^9.1.2",
     "@supabase/supabase-js": "^2.108.2",
+    "auth0-lock": "^15.0.1",
     "elkjs": "^0.11.1",
     "framer-motion": "^12.42.2",
     "react": "^19.2.7",

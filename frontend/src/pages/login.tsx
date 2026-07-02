@@ -1,10 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import RegisterModal from "./RegisterModal";
 
 function Login() {
-  const { loginWithRedirect, isAuthenticated } = useAuth0();
+  const { loginWithPopup, isAuthenticated } = useAuth0();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -13,52 +18,110 @@ function Login() {
   }, [isAuthenticated, navigate]);
 
   const handleGoogleLogin = () => {
-    loginWithRedirect({
+    loginWithPopup({
       authorizationParams: {
         connection: 'google-oauth2',
-        redirect_uri: window.location.origin + '/journal'
       }
     });
   };
 
-  const handleEmailLogin = () => {
-    loginWithRedirect({
-      authorizationParams: {
-        screen_hint: 'signup',
-        redirect_uri: window.location.origin + '/journal'
-      }
-    });
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await loginWithPopup({
+        authorizationParams: {
+          screen_hint: 'signin',
+        }
+      });
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>Login to Your Learning Journal</h1>
-        <p style={{ color: '#666', marginBottom: '2rem' }}>
-          Track your developer learning journey
-        </p>
+        {/* Header with icon and brand name */}
+        <div className="auth-header">
+          <div className="auth-brand-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#FF6B00" strokeWidth="2"/>
+              <path d="M12 6V12L16 16" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <span className="auth-brand-name">B2A Learning Journal</span>
+        </div>
 
+        {/* Welcome section */}
+        <h1 className="auth-welcome">Welcome</h1>
+        <p className="auth-subtitle">Log in to your Learning Journal</p>
+
+        {/* Login form */}
+        <form onSubmit={handleEmailLogin} className="auth-form">
+          <div className="auth-input">
+            <label htmlFor="email">Username or Email address*</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <div className="auth-input">
+            <label htmlFor="password">Password*</label>
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="auth-options">
+            <label>
+              <input type="checkbox" />
+              Remember me
+            </label>
+            <button type="button" className="reset-password">Reset password</button>
+          </div>
+
+          <button type="submit" className="auth-button">Continue</button>
+        </form>
+
+        {/* Separator */}
+        <div className="auth-separator">
+          <span>OR</span>
+        </div>
+
+        {/* Google login button */}
         <button
           onClick={handleGoogleLogin}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            background: 'white',
-            color: '#333',
-            fontSize: '1rem',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            transition: 'background 0.2s',
-            marginBottom: '1rem'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.background = '#f5f5f5'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+          className="google-btn"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -69,17 +132,12 @@ function Login() {
           Continue with Google
         </button>
 
-        <button
-          onClick={handleEmailLogin}
-          className="auth-button"
-        >
-          Continue with Email
-        </button>
-
-        <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666' }}>
-          By continuing, you agree to our Terms of Service and Privacy Policy
+        <div className="auth-footer">
+          Don't have an account? <button onClick={() => setShowRegisterModal(true)} style={{ background: 'none', border: 'none', color: '#FF6B00', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'none' }}>Register</button>
         </div>
       </div>
+
+      <RegisterModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
     </div>
   );
 }
