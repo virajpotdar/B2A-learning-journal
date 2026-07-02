@@ -9,7 +9,7 @@ interface Note {
   title: string;
   content: string;
   category: string;
-  created_at: string;
+  created_at?: string;
 }
 
 interface RoadmapNode {
@@ -117,9 +117,8 @@ const Roadmap: React.FC<RoadmapProps> = ({ category }) => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      const response = await fetch(`${backendUrl}/api/notes`);
-      const notes: Note[] = await response.json();
+      const { fetchNotes } = await import('../services/notesApi');
+      const notes: Note[] = await fetchNotes();
 
       // Filter by category if provided
       const filteredNotes = category 
