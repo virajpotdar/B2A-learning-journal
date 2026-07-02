@@ -16,6 +16,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install latest Vercel CLI
+      run: npm install -g vercel@latest
+
     - name: Deploy Frontend to Vercel (QA)
       uses: amondnet/vercel-action@v25
       with:
@@ -23,7 +26,6 @@ jobs:
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
         working-directory: ./frontend
-        vercel-cli: vercel@latest
 
   deploy-backend:
     runs-on: ubuntu-latest
