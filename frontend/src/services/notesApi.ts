@@ -1,27 +1,72 @@
 import type { JournalNote } from '../types';
 import { supabase } from '../supabase/client';
 
-export async function fetchNotes(): Promise<JournalNote[]> {
-  // Get user profile by email (works with Auth0 auth)
-  const { data: { user: auth0User } } = await supabase.auth.getUser();
+// Helper function to get user email from Auth0
+async function getUserEmail(): Promise<string> {
+  // First check if we stored the email in localStorage
+  const storedEmail = localStorage.getItem('user_email');
+  if (storedEmail) {
+    return storedEmail;
+  }
+
+  // Try to get from Supabase auth first
+  const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+  if (supabaseUser?.email) {
+    return supabaseUser.email;
+  }
+
+  // Try to get from Auth0 session storage
+  const auth0Keys = Object.keys(localStorage).filter(key => key.includes('auth0') || key.includes('Auth0'));
+  console.log('Auth0 keys in localStorage:', auth0Keys);
   
-  let email: string | null = null;
-  if (auth0User?.email) {
-    email = auth0User.email;
-  } else {
-    // Fallback: try to get from localStorage (Auth0)
-    const auth0UserStr = localStorage.getItem('auth0_user');
-    if (auth0UserStr) {
-      try {
-        const auth0Data = JSON.parse(auth0UserStr);
-        email = auth0Data.email;
-      } catch (e) {
-        console.error('Error parsing auth0 user from localStorage:', e);
+  for (const key of auth0Keys) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value) {
+        const parsed = JSON.parse(value);
+        // Check for user data in various possible locations
+        if (parsed.user?.email) {
+          return parsed.user.email;
+        }
+        if (parsed.body?.user?.email) {
+          return parsed.body.user.email;
+        }
+        if (parsed.email) {
+          return parsed.email;
+        }
       }
+    } catch (e) {
+      // Skip invalid JSON
     }
   }
 
-  if (!email) throw new Error('User not authenticated');
+  // Try sessionStorage as well
+  const sessionKeys = Object.keys(sessionStorage).filter(key => key.includes('auth0') || key.includes('Auth0'));
+  for (const key of sessionKeys) {
+    try {
+      const value = sessionStorage.getItem(key);
+      if (value) {
+        const parsed = JSON.parse(value);
+        if (parsed.user?.email) {
+          return parsed.user.email;
+        }
+        if (parsed.body?.user?.email) {
+          return parsed.body.user.email;
+        }
+        if (parsed.email) {
+          return parsed.email;
+        }
+      }
+    } catch (e) {
+      // Skip invalid JSON
+    }
+  }
+
+  throw new Error('User not authenticated - no email found in Auth0 storage');
+}
+
+export async function fetchNotes(): Promise<JournalNote[]> {
+  const email = await getUserEmail();
 
   // Get user profile
   const { data: profile } = await supabase
@@ -54,19 +99,7 @@ export async function createNote(note: {
   content: string;
   category: string;
 }): Promise<JournalNote> {
-  // Get user email from Auth0
-  let email: string | null = null;
-  const auth0UserStr = localStorage.getItem('auth0_user');
-  if (auth0UserStr) {
-    try {
-      const auth0Data = JSON.parse(auth0UserStr);
-      email = auth0Data.email;
-    } catch (e) {
-      console.error('Error parsing auth0 user from localStorage:', e);
-    }
-  }
-
-  if (!email) throw new Error('User not authenticated');
+  const email = await getUserEmail();
 
   // Get user profile
   const { data: profile } = await supabase
@@ -103,20 +136,6 @@ export async function updateNote(
   id: string,
   data: { title: string; content: string }
 ): Promise<JournalNote> {
-  // Get user email from Auth0
-  let email: string | null = null;
-  const auth0UserStr = localStorage.getItem('auth0_user');
-  if (auth0UserStr) {
-    try {
-      const auth0Data = JSON.parse(auth0UserStr);
-      email = auth0Data.email;
-    } catch (e) {
-      console.error('Error parsing auth0 user from localStorage:', e);
-    }
-  }
-
-  if (!email) throw new Error('User not authenticated');
-
   const { data: updated, error } = await supabase
     .from('notes')
     .update({
