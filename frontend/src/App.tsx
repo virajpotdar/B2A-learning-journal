@@ -32,6 +32,9 @@ export default function App() {
           if (!email) return;
           const username = user.name || user.nickname || email.split('@')[0];
 
+          // Store user email in localStorage for API calls
+          localStorage.setItem('user_email', email);
+
           const { data: existingProfile } = await supabase
             .from('profiles')
             .select('id')
