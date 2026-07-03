@@ -2,14 +2,32 @@ import type { JournalNote } from '../types';
 import { supabase } from '../supabase/client';
 
 export async function fetchNotes(): Promise<JournalNote[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
+  // Get user profile by email (works with Auth0 auth)
+  const { data: { user: auth0User } } = await supabase.auth.getUser();
+  
+  let email: string | null = null;
+  if (auth0User?.email) {
+    email = auth0User.email;
+  } else {
+    // Fallback: try to get from localStorage (Auth0)
+    const auth0UserStr = localStorage.getItem('auth0_user');
+    if (auth0UserStr) {
+      try {
+        const auth0Data = JSON.parse(auth0UserStr);
+        email = auth0Data.email;
+      } catch (e) {
+        console.error('Error parsing auth0 user from localStorage:', e);
+      }
+    }
+  }
+
+  if (!email) throw new Error('User not authenticated');
 
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
-    .eq('email', user.email)
+    .eq('email', email)
     .single();
 
   if (!profile) throw new Error('User profile not found');
@@ -36,14 +54,25 @@ export async function createNote(note: {
   content: string;
   category: string;
 }): Promise<JournalNote> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
+  // Get user email from Auth0
+  let email: string | null = null;
+  const auth0UserStr = localStorage.getItem('auth0_user');
+  if (auth0UserStr) {
+    try {
+      const auth0Data = JSON.parse(auth0UserStr);
+      email = auth0Data.email;
+    } catch (e) {
+      console.error('Error parsing auth0 user from localStorage:', e);
+    }
+  }
+
+  if (!email) throw new Error('User not authenticated');
 
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
-    .eq('email', user.email)
+    .eq('email', email)
     .single();
 
   if (!profile) throw new Error('User profile not found');
@@ -74,8 +103,19 @@ export async function updateNote(
   id: string,
   data: { title: string; content: string }
 ): Promise<JournalNote> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
+  // Get user email from Auth0
+  let email: string | null = null;
+  const auth0UserStr = localStorage.getItem('auth0_user');
+  if (auth0UserStr) {
+    try {
+      const auth0Data = JSON.parse(auth0UserStr);
+      email = auth0Data.email;
+    } catch (e) {
+      console.error('Error parsing auth0 user from localStorage:', e);
+    }
+  }
+
+  if (!email) throw new Error('User not authenticated');
 
   const { data: updated, error } = await supabase
     .from('notes')
