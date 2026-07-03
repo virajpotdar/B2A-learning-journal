@@ -19,6 +19,7 @@ import GroupDashboard from "./pages/GroupDashboard";
 import SearchDialog from "./components/SearchDialog";
 import { SearchProvider } from "./context/SearchContext";
 import Login from "./pages/login";
+import Register from "./pages/register";
 
 export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth0();
@@ -103,7 +104,7 @@ export default function App() {
               isAuthenticated ? (
                 <Navigate to="/journal" replace />
               ) : (
-                <Login />
+                <Register />
               )
             }
           />
