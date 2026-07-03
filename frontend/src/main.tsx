@@ -13,8 +13,8 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppThemeProvider>
       <Auth0Provider
-        domain="dev-74zy5hv4cgyeu07c.au.auth0.com"
-        clientId="HAvnSllVE2WTHVbM5itCE3GVuPjclddZ"
+        domain={import.meta.env.VITE_AUTH0_DOMAIN || 'dev-74zy5hv4cgyeu07c.au.auth0.com'}
+        clientId={import.meta.env.VITE_AUTH0_CLIENT_ID || 'HAvnSllVE2WTHVbM5itCE3GVuPjclddZ'}
         authorizationParams={{
           redirect_uri: window.location.origin
         }}

@@ -11,7 +11,7 @@ import { initializeTelemetry, logToGrafana } from './telemetry';
 // 1. Load the secret keys from the .env file
 dotenv.config();
 
-// 2. Initialize OpenTelemetry for logging and tracing
+// 2. Initialize logging system
 initializeTelemetry();
 
 const app = express();
