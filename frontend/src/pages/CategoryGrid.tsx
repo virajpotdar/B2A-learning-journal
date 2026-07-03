@@ -52,25 +52,8 @@ export default function CategoryGrid() {
                       {category.name}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
                     <Chip label={`${category.count} topics`} size="small" variant="outlined" />
-                    <Chip label={`${category.progress}% complete`} size="small" color="primary" />
-                  </Box>
-                  <Box
-                    sx={{
-                      height: 6,
-                      bgcolor: 'grey.200',
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        height: '100%',
-                        bgcolor: 'primary.main',
-                        width: `${category.progress}%`,
-                      }}
-                    />
                   </Box>
                 </CardContent>
               </Card>

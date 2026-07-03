@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box, LinearProgress } from '@mui/material';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 import { motion } from 'framer-motion';
 
 interface ProgressCardProps {
@@ -15,7 +15,6 @@ export default function ProgressCard({
   title,
   value,
   subtitle,
-  progress,
   icon,
   color = '#6366f1',
   index = 0,
@@ -43,19 +42,6 @@ export default function ProgressCard({
             <Typography variant="caption" color="text.secondary">
               {subtitle}
             </Typography>
-          )}
-          {progress !== undefined && (
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                mt: 1.5,
-                height: 4,
-                borderRadius: 2,
-                bgcolor: 'action.hover',
-                '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 2 },
-              }}
-            />
           )}
         </CardContent>
       </Card>

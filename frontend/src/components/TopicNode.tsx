@@ -1,6 +1,5 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import ProgressRing from './ProgressRing';
 import StatusBadge from './StatusBadge';
 import DifficultyBadge from './DifficultyBadge';
 
@@ -49,7 +48,6 @@ const TopicNode: React.FC<TopicNodeProps> = ({ data }) => {
 
   const categoryColor = getCategoryColor(data.category);
   const categoryIcon = getCategoryIcon(data.category);
-  const progress = data.progress || Math.floor(Math.random() * 100);
   const status = data.status || 'not_started';
   const difficulty = data.difficulty || 'beginner';
 
@@ -76,31 +74,28 @@ const TopicNode: React.FC<TopicNodeProps> = ({ data }) => {
         style={{ background: categoryColor, width: 8, height: 8 }}
       />
       
-      {/* Header with category and progress */}
+      {/* Header with category */}
       <div style={{ 
         display: 'flex', 
-        justifyContent: 'space-between', 
         alignItems: 'center', 
+        gap: '6px', 
         marginBottom: '8px' 
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '16px' }}>{categoryIcon}</span>
-          <span 
-            style={{
-              padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '10px',
-              fontWeight: '700',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              backgroundColor: `${categoryColor}15`,
-              color: categoryColor
-            }}
-          >
-            {data.category}
-          </span>
-        </div>
-        <ProgressRing progress={progress} size={20} strokeWidth={2} color={categoryColor} />
+        <span style={{ fontSize: '16px' }}>{categoryIcon}</span>
+        <span 
+          style={{
+            padding: '3px 8px',
+            borderRadius: '6px',
+            fontSize: '10px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            backgroundColor: `${categoryColor}15`,
+            color: categoryColor
+          }}
+        >
+          {data.category}
+        </span>
       </div>
       
       {/* Title */}

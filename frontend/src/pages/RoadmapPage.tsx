@@ -4,7 +4,6 @@ import {
   Box,
   Container,
   Typography,
-  LinearProgress,
   IconButton,
   TextField,
   Menu,
@@ -28,7 +27,6 @@ import { fetchNotes, updateNote, deleteNote } from '../services/notesApi';
 import { getCategoryBySlug } from '../data/categories';
 import {
   buildTreeFromNotes,
-  computeCategoryProgress,
   filterNodes,
   findNodeById,
 } from '../utils/roadmapTree';
@@ -103,8 +101,6 @@ export default function RoadmapPage() {
       }
     }
   }, [searchParams, treeData]);
-
-  const progress = useMemo(() => computeCategoryProgress(treeData), [treeData]);
 
   const displayedTree = useMemo(
     () => filterNodes(treeData, searchQuery, statusFilter),
@@ -196,26 +192,6 @@ export default function RoadmapPage() {
               </IconButton>
             </Stack>
 
-            <Box sx={{ mt: 3, maxWidth: 400 }}>
-              <Stack direction="row" sx={{ mb: 0.5, justifyContent: 'space-between' }}>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>
-                  Progress
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 800 }}>
-                  {progress}%
-                </Typography>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={progress}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  '& .MuiLinearProgress-bar': { bgcolor: 'white', borderRadius: 4 },
-                }}
-              />
-            </Box>
           </motion.div>
         </Container>
       </Box>
@@ -302,6 +278,7 @@ export default function RoadmapPage() {
               onSelect={handleSelect}
               onTreeChange={setTreeData}
               onToggleBookmark={handleToggleBookmark}
+              onDelete={handleDelete}
             />
           </Box>
         </Box>

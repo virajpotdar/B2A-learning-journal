@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, Button } from '@mui/material';
 import { Bookmark, BookmarkBorder, Edit, Delete } from '@mui/icons-material';
 import './RoadmapCard.css';
 
@@ -91,16 +91,19 @@ const RoadmapCard: React.FC<RoadmapCardProps> = ({
             </IconButton>
           )}
           {onDelete && (
-            <IconButton
+            <Button
               size="small"
+              color="error"
+              variant="outlined"
+              startIcon={<Delete fontSize="small" />}
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
-              sx={{ color: 'error.main' }}
+              sx={{ minWidth: 'auto', px: 1, py: 0.25, fontSize: '0.75rem', height: 28 }}
             >
-              <Delete fontSize="small" />
-            </IconButton>
+              Delete
+            </Button>
           )}
         </Box>
       </Box>

@@ -1,4 +1,4 @@
-import { Card, CardContent, Box, Typography, LinearProgress, IconButton, Tooltip } from '@mui/material';
+import { Card, CardContent, Box, Typography, IconButton, Tooltip, Button } from '@mui/material';
 import { Share, Bookmark, BookmarkBorder, Delete } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import type { LearningCategory } from '../types';
@@ -18,7 +18,6 @@ interface CategoryCardProps {
 export default function CategoryCard({
   category,
   topicCount,
-  progress,
   onClick,
   index = 0,
   onShare,
@@ -133,28 +132,25 @@ export default function CategoryCard({
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5, gap: 1 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
                 {topicCount} topic{topicCount !== 1 ? 's' : ''}
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: category.color }}>
-                {progress}%
-              </Typography>
+              {onDelete && (
+                <Button
+                  size="small"
+                  color="error"
+                  variant="outlined"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  sx={{ minWidth: 'auto', px: 1.25, py: 0.5, fontSize: '0.75rem' }}
+                >
+                  Delete
+                </Button>
+              )}
             </Box>
-
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: 'action.hover',
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 3,
-                  background: category.gradient,
-                },
-              }}
-            />
           </CardContent>
         </Box>
       </Card>
