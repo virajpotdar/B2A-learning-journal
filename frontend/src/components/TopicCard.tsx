@@ -1,4 +1,4 @@
-import { Card, CardContent, Box, Typography, IconButton, Chip, Stack } from '@mui/material';
+import { Card, CardContent, Box, Typography, IconButton, Chip, Stack, Button } from '@mui/material';
 import {
   ExpandMore,
   ChevronRight,
@@ -6,9 +6,9 @@ import {
   BookmarkBorder,
   CheckCircle,
   AccessTime,
+  Delete,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import ProgressRing from './ProgressRing';
 import DifficultyBadge from './DifficultyBadge';
 import StatusBadge from './StatusBadge';
 import { getCategoryColor } from '../data/categories';
@@ -20,6 +20,7 @@ interface TopicCardProps {
   onClick: () => void;
   onToggleExpand: () => void;
   onToggleBookmark: () => void;
+  onDelete?: () => void;
 }
 
 export default function TopicCard({
@@ -28,6 +29,7 @@ export default function TopicCard({
   onClick,
   onToggleExpand,
   onToggleBookmark,
+  onDelete,
 }: TopicCardProps) {
   const categoryColor = getCategoryColor(node.category);
   const hasChildren = node.children.length > 0;
@@ -83,24 +85,7 @@ export default function TopicCard({
               </Stack>
             </Box>
 
-            <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
-              <Box sx={{ position: 'relative' }}>
-                <ProgressRing progress={node.progress} size={36} strokeWidth={3} color={categoryColor} />
-                <Typography
-                  variant="caption"
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%,-50%)',
-                    fontSize: '0.6rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {node.progress}%
-                </Typography>
-              </Box>
-
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -111,7 +96,22 @@ export default function TopicCard({
               >
                 {node.isBookmarked ? <Bookmark fontSize="small" /> : <BookmarkBorder fontSize="small" />}
               </IconButton>
-            </Stack>
+              {onDelete && (
+                <Button
+                  size="small"
+                  color="error"
+                  variant="outlined"
+                  startIcon={<Delete fontSize="small" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  sx={{ minWidth: 'auto', px: 1, py: 0.25, fontSize: '0.75rem', height: 28 }}
+                >
+                  Delete
+                </Button>
+              )}
+            </Box>
           </Stack>
 
           {hasChildren && (

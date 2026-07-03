@@ -6,7 +6,7 @@ export default defineConfig({
     react()
   ],
   server: {
-    port: 5174,
+    port: 5173,
     watch: {
       usePolling: true,
     },
@@ -15,3 +15,4 @@ export default defineConfig({
     }
   }
 })
+
