@@ -19,7 +19,7 @@ import GroupDashboard from "./pages/GroupDashboard";
 import SearchDialog from "./components/SearchDialog";
 import { SearchProvider } from "./context/SearchContext";
 import Login from "./pages/login";
-import Register from "./pages/register";
+import Register from "./pages/Register";
 
 export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth0();

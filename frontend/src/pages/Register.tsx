@@ -51,7 +51,7 @@ export default function Register() {
         <p className="auth-subtitle">Sign up to start your learning journey</p>
 
         {/* Registration form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleEmailRegister(); }} className="auth-form">
+        <form onSubmit={handleEmailRegister} className="auth-form">
           <div className="auth-input">
             <label htmlFor="username">Username*</label>
             <input
