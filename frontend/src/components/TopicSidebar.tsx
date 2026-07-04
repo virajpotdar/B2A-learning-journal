@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Drawer,
   Box,
   Typography,
   IconButton,
@@ -13,8 +12,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
   Close,
@@ -53,8 +50,6 @@ export default function TopicSidebar({
   onDelete,
   onRefresh,
 }: TopicSidebarProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const categoryColor = getCategoryColor(node.category);
 
   const [bookmarked, setBookmarked] = useState(node.isBookmarked);
@@ -322,22 +317,8 @@ export default function TopicSidebar({
   );
 
   return (
-    <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={onClose}
-        variant={isMobile ? 'temporary' : 'persistent'}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: { xs: '100%', sm: 420, md: 460, lg: 500 },
-            boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
-            maxWidth: '100vw',
-          },
-        }}
-      >
-        {drawerContent}
-      </Drawer>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {drawerContent}
 
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Topic</DialogTitle>
@@ -383,6 +364,6 @@ export default function TopicSidebar({
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   );
 }

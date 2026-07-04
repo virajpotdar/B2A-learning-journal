@@ -281,19 +281,37 @@ export default function RoadmapPage() {
               onDelete={handleDelete}
             />
           </Box>
+
+          {/* Right sidebar for topic details */}
+          <Box
+            sx={{
+              position: 'fixed',
+              right: 0,
+              top: 64,
+              width: { md: '460px', lg: '500px' },
+              height: 'calc(100vh - 64px)',
+              bgcolor: 'background.paper',
+              borderLeft: 1,
+              borderColor: 'divider',
+              transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.3s ease-in-out',
+              zIndex: 1000,
+              overflow: 'auto',
+            }}
+          >
+            {selectedNode && (
+              <TopicSidebar
+                node={selectedNode}
+                open={sidebarOpen}
+                onClose={handleCloseSidebar}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+                onRefresh={loadNotes}
+              />
+            )}
+          </Box>
         </Box>
       </Container>
-
-      {selectedNode && (
-        <TopicSidebar
-          node={selectedNode}
-          open={sidebarOpen}
-          onClose={handleCloseSidebar}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onRefresh={loadNotes}
-        />
-      )}
     </Box>
   );
 }
